@@ -1,0 +1,30 @@
+/* Custom UI styling for Sumangal Services Garage Billing App */
+
+@media print {
+    body {
+        background-color: #ffffff !important;
+    }
+    header, #add-item-btn, #submit-bill-btn, #logout-btn, .remove-btn {
+        display: none !important;
+    }
+}
+
+/* Touch-friendly buttons and inputs for Android mobile screens */
+input, select, textarea, button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+input:focus, textarea:focus {
+    box-shadow: 0 0 0 3px rgba(12, 84, 160, 0.15);
+}
+
+/* Hide spin buttons for number inputs */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}

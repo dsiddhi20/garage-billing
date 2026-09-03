@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sumangal Services - Create Bill</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 min-h-screen pb-12 font-sans">
+    <!-- Navbar / Header -->
+    <header class="bg-[#0C54A0] text-white px-4 py-6 shadow-md sticky top-0 z-40">
+        <div class="max-w-xl mx-auto flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold tracking-wide">SUMANGAL SERVICES</h1>
+                <p class="text-[10px] text-blue-100 uppercase tracking-widest">Maruti Servicing Centre</p>
+            </div>
+            <button id="logout-btn" class="p-2 text-white hover:text-red-200 transition-colors" title="Logout">
+                <i class="fa-solid fa-right-from-bracket text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container (Owner Billing Form) -->
+    <main class="max-w-xl mx-auto px-4 mt-6">
+        <div id="form-container" class="bg-white rounded-2xl shadow-lg border border-slate-200 p-5 space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h2 class="text-lg font-bold text-slate-800">New Bill</h2>
+                <div class="text-right">
+                    <span id="bill-no-badge" class="bg-red-50 text-red-600 font-bold px-3 py-1 rounded-full text-sm border border-red-200">
+                        Bill No: Loading...
+                    </span>
+                </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="validation-error" class="hidden p-3 bg-red-50 text-red-600 rounded-xl text-sm border border-red-200 font-medium"></div>
+
+            <form id="billing-form" class="space-y-6">
+                <!-- Customer Details -->
+                <div class="space-y-4">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center">
+                        <i class="fa-solid fa-user mr-2 text-[#0C54A0]"></i> Customer Details
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Customer Name *</label>
+                            <input 
+                                type="text" 
+                                id="cust-name" 
+                                placeholder="Enter Full Name" 
+                                class="w-full py-3 px-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-base"
+                                required
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Mobile Number *</label>
+                            <input 
+                                type="tel" 
+                                id="cust-mobile" 
+                                inputmode="numeric"
+                                pattern="[0-9]{10}"
+                                maxlength="10"
+                                placeholder="Enter 10-Digit Mobile" 
+                                class="w-full py-3 px-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-base"
+                                required
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">Address (Optional)</label>
+                            <textarea 
+                                id="cust-address" 
+                                rows="2" 
+                                placeholder="Enter Address" 
+                                class="w-full py-3 px-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-base resize-none"
+                            ></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Details -->
+                <div class="space-y-4 pt-2">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center">
+                        <i class="fa-solid fa-car mr-2 text-[#0C54A0]"></i> Vehicle Details
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Vehicle Number *</label>
+                                <input 
+                                    type="text" 
+                                    id="veh-number" 
+                                    placeholder="MH-26-S-0031" 
+                                    class="w-full py-3 px-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-base uppercase"
+                                    required
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Make/Model (Optional)</label>
+                                <input 
+                                    type="text" 
+                                    id="veh-model" 
+                                    placeholder="Maruti Swift" 
+                                    class="w-full py-3 px-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-base"
+                                >
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">KM / Odometer *</label>
+                                <input 
+                                    type="number" 
+                                    id="veh-km" 
+                                    inputmode="numeric"
+                                    min="0"
+                                    placeholder="Enter Odometer Reading" 
+                                    class="w-full py-3 px-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-base"
+                                    required
+                                >
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Bill Date *</label>
+                                <input 
+                                    type="date" 
+                                    id="bill-date" 
+                                    class="w-full py-3 px-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-base"
+                                    required
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Particulars / Items Grid -->
+                <div class="space-y-4 pt-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-list-ol mr-2 text-[#0C54A0]"></i> Particulars & Items
+                        </h3>
+                    </div>
+
+                    <!-- Items container -->
+                    <div id="items-container" class="space-y-3">
+                        <!-- Dynamic items inserted here -->
+                    </div>
+
+                    <!-- Add Item Button -->
+                    <button 
+                        type="button" 
+                        id="add-item-btn" 
+                        class="w-full bg-slate-100 hover:bg-slate-200 text-[#0C54A0] font-bold py-3 px-4 rounded-xl border-2 border-dashed border-[#0C54A0] flex items-center justify-center transition-all text-base"
+                    >
+                        <i class="fa-solid fa-circle-plus mr-2 text-lg"></i> Add Item
+                    </button>
+                </div>
+
+                <!-- Summary Calculations -->
+                <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4 space-y-3">
+                    <div class="flex items-center justify-between text-sm text-slate-600">
+                        <span>Subtotal:</span>
+                        <span id="subtotal-label" class="font-bold">₹0.00</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 items-center">
+                        <div class="flex items-center">
+                            <span class="text-sm text-slate-600 mr-2">Discount:</span>
+                        </div>
+                        <input 
+                            type="number" 
+                            id="discount-input" 
+                            inputmode="decimal"
+                            min="0"
+                            step="0.01"
+                            value="0" 
+                            class="py-2 px-3 border border-slate-300 rounded-lg text-right font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 items-center border-b border-slate-200 pb-3">
+                        <div class="flex items-center">
+                            <span class="text-sm text-slate-600 mr-2">Tax / GST:</span>
+                        </div>
+                        <input 
+                            type="number" 
+                            id="tax-input" 
+                            inputmode="decimal"
+                            min="0"
+                            step="0.01"
+                            value="0" 
+                            class="py-2 px-3 border border-slate-300 rounded-lg text-right font-medium text-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                    </div>
+                    <div class="flex items-center justify-between text-base font-bold text-[#0C54A0] pt-1">
+                        <span>FINAL TOTAL:</span>
+                        <span id="total-label" class="text-lg">₹0.00</span>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <button 
+                    type="button" 
+                    id="submit-bill-btn" 
+                    class="w-full bg-[#0C54A0] hover:bg-blue-800 text-white font-bold py-4 px-6 rounded-2xl active:scale-[0.98] transition-transform text-lg shadow-md flex items-center justify-center"
+                >
+                    <i class="fa-solid fa-receipt mr-2 text-xl"></i> Generate Bill
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Screen Overlay (Hidden by default) -->
+        <div id="success-container" class="hidden bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center space-y-6">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-50 rounded-full border border-green-200 mb-2">
+                <i class="fa-solid fa-circle-check text-green-500 text-5xl"></i>
+            </div>
+            
+            <div class="space-y-2">
+                <h2 class="text-2xl font-bold text-slate-800">BILL GENERATED ✓</h2>
+                <p id="success-bill-no" class="text-[#0C54A0] font-bold text-lg">Bill No: SS-2457</p>
+                <p class="text-slate-500 text-sm">Invoice has been created and saved in the database.</p>
+            </div>
+
+            <div class="space-y-3 pt-4">
+                <button 
+                    id="view-pdf-btn" 
+                    class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-4 px-6 rounded-xl flex items-center justify-center border border-slate-300 transition-colors text-lg"
+                >
+                    <i class="fa-solid fa-file-pdf mr-3 text-red-500 text-xl"></i> View PDF Bill
+                </button>
+
+                <button 
+                    id="share-pdf-btn" 
+                    class="w-full bg-[#25D366] hover:bg-[#20ba59] text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center shadow transition-colors text-lg"
+                >
+                    <i class="fa-brands fa-whatsapp mr-3 text-2xl"></i> Share / Send PDF
+                </button>
+
+                <button 
+                    id="new-bill-btn" 
+                    class="w-full bg-[#0C54A0] hover:bg-blue-800 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center shadow transition-colors text-lg"
+                >
+                    <i class="fa-solid fa-plus mr-3 text-lg"></i> Create New Bill
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Confirmation Modal (Hidden by default) -->
+    <div id="confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+            <h3 class="text-lg font-bold text-slate-800 flex items-center">
+                <i class="fa-solid fa-circle-question text-yellow-500 mr-2 text-xl"></i> Confirm Invoice?
+            </h3>
+            <p class="text-slate-600 text-sm leading-relaxed">
+                Are you sure you want to finalize this bill? It will be saved permanently in the database.
+            </p>
+            <div class="flex items-center space-x-3 pt-2">
+                <button 
+                    id="confirm-cancel" 
+                    class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-3 px-4 rounded-xl border border-slate-300 transition-colors"
+                >
+                    No, Edit
+                </button>
+                <button 
+                    id="confirm-ok" 
+                    class="flex-1 bg-[#0C54A0] hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow transition-colors"
+                >
+                    Yes, Generate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inject App JS -->
+    <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sumangal Services - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 min-h-screen font-sans pb-16">
+    <!-- Header -->
+    <header class="bg-[#0C54A0] text-white px-6 py-5 shadow-md flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <i class="fa-solid fa-gauge-high text-2xl"></i>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide">SUMANGAL SERVICES</h1>
+                <p class="text-[10px] text-blue-100 uppercase tracking-widest">Admin Dashboard</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <a href="/" class="text-white hover:text-blue-200 transition-colors text-sm font-semibold border border-white border-opacity-30 rounded-lg px-3 py-2 flex items-center">
+                <i class="fa-solid fa-receipt mr-2"></i> Billing App
+            </a>
+            <button id="logout-btn" class="p-2 text-white hover:text-red-200 transition-colors" title="Logout">
+                <i class="fa-solid fa-right-from-bracket text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Content Container -->
+    <main class="max-w-7xl mx-auto px-6 mt-8 space-y-8">
+        
+        <!-- Stats Widgets -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Widget 1: Revenue -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center space-x-4">
+                <div class="p-4 bg-blue-50 rounded-xl text-[#0C54A0]">
+                    <i class="fa-solid fa-indian-rupee-sign text-2xl w-8 text-center"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Revenue</p>
+                    <h3 id="stat-revenue" class="text-2xl font-black text-slate-800 mt-1">₹0.00</h3>
+                </div>
+            </div>
+
+            <!-- Widget 2: Total Bills -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center space-x-4">
+                <div class="p-4 bg-green-50 rounded-xl text-green-600">
+                    <i class="fa-solid fa-file-invoice text-2xl w-8 text-center"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Bills</p>
+                    <h3 id="stat-bills" class="text-2xl font-black text-slate-800 mt-1">0</h3>
+                </div>
+            </div>
+
+            <!-- Widget 3: Average Ticket -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex items-center space-x-4">
+                <div class="p-4 bg-purple-50 rounded-xl text-purple-600">
+                    <i class="fa-solid fa-calculator text-2xl w-8 text-center"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Average Bill Amount</p>
+                    <h3 id="stat-average" class="text-2xl font-black text-slate-800 mt-1">₹0.00</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+            <h2 class="text-sm font-bold text-slate-800 mb-4 flex items-center">
+                <i class="fa-solid fa-filter text-[#0C54A0] mr-2"></i> Search & Filters
+            </h2>
+            
+            <form id="filter-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Search text</label>
+                    <input 
+                        type="text" 
+                        id="filter-search" 
+                        placeholder="Bill #, Name, Mobile, Vehicle #" 
+                        class="w-full py-2 px-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    >
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">From Date</label>
+                    <input 
+                        type="date" 
+                        id="filter-start" 
+                        class="w-full py-2 px-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    >
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">To Date</label>
+                    <input 
+                        type="date" 
+                        id="filter-end" 
+                        class="w-full py-2 px-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    >
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button 
+                        type="submit" 
+                        class="flex-1 bg-[#0C54A0] hover:bg-blue-800 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-colors shadow flex items-center justify-center"
+                    >
+                        <i class="fa-solid fa-magnifying-glass mr-2"></i> Filter
+                    </button>
+                    <button 
+                        type="button" 
+                        id="clear-filters-btn"
+                        class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-2.5 px-4 rounded-xl text-sm transition-colors border border-slate-300 flex items-center justify-center"
+                        title="Clear Filters"
+                    >
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                    <button 
+                        type="button" 
+                        id="export-csv-btn"
+                        class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-colors shadow flex items-center justify-center"
+                        title="Export to CSV"
+                    >
+                        <i class="fa-solid fa-file-excel mr-2"></i> Export
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Table Listing -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+                <h2 class="text-base font-bold text-slate-800">Generated Bills List</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase">
+                            <th class="py-4 px-6">Bill Number</th>
+                            <th class="py-4 px-6">Date</th>
+                            <th class="py-4 px-6">Customer Details</th>
+                            <th class="py-4 px-6">Vehicle Details</th>
+                            <th class="py-4 px-6">Odo (KM)</th>
+                            <th class="py-4 px-6 text-right">Total Amount</th>
+                            <th class="py-4 px-6 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bills-table-body" class="divide-y divide-slate-100 text-sm text-slate-700">
+                        <!-- Dynamic bill rows will be inserted here -->
+                    </tbody>
+                </table>
+                <div id="empty-state" class="hidden p-12 text-center text-slate-400 space-y-2">
+                    <i class="fa-solid fa-folder-open text-4xl"></i>
+                    <p class="text-base font-medium">No bills found matching filters.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- History Overlay (Modal) -->
+    <div id="history-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="bg-[#0C54A0] text-white p-5 flex items-center justify-between">
+                <h3 id="history-modal-title" class="font-bold text-lg">Billing History</h3>
+                <button onclick="closeHistoryModal()" class="text-white hover:text-blue-200 text-xl font-bold p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-6 flex-1">
+                <!-- Info block -->
+                <div id="history-info-card" class="bg-slate-50 border border-slate-200 rounded-xl p-4 grid grid-cols-2 gap-4 text-sm text-slate-700">
+                    <!-- Dynamic details go here -->
+                </div>
+                
+                <!-- History Table -->
+                <div class="space-y-3">
+                    <h4 class="font-bold text-slate-800 text-sm">Previous Invoices</h4>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase">
+                                    <th class="py-3 px-4">Bill Number</th>
+                                    <th class="py-3 px-4">Date</th>
+                                    <th class="py-3 px-4">Associated Target</th>
+                                    <th class="py-3 px-4 text-right">Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-table-body" class="divide-y divide-slate-100 text-sm text-slate-700">
+                                <!-- Dynamic rows insert here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inject Dashboard Logic -->
+    <script src="/admin.js"></script>
+</body>
+</html>
