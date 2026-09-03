@@ -3,7 +3,7 @@ import hashlib
 import csv
 from io import StringIO
 from datetime import datetime
-from flask import Flask, request, jsonify, session, send_from_directory, make_response, redirect, url_path_join
+from flask import Flask, request, jsonify, session, send_from_directory, make_response, redirect
 import database
 from config import Config
 from pdf_generator import generate_bill_pdf
