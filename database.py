@@ -1,5 +1,6 @@
-import oracledb
+import os
 import logging
+import sqlite3
 from config import Config
 
 # Configure logger
@@ -7,11 +8,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 _pool = None
+_use_sqlite = False
+_sqlite_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "garage_billing.db")
+
+def is_sqlite():
+    global _use_sqlite
+    return _use_sqlite
 
 def get_pool():
-    global _pool
+    global _pool, _use_sqlite
+    if _use_sqlite:
+        return None
     if _pool is None:
         try:
+            import oracledb
             # Enable thin mode connection pooling
             _pool = oracledb.create_pool(
                 user=Config.DB_USER,
@@ -23,24 +33,46 @@ def get_pool():
             )
             logger.info("Oracle Database connection pool created successfully.")
         except Exception as e:
-            logger.error(f"Failed to create Oracle connection pool: {e}")
-            raise e
+            logger.warning(f"Oracle Database unavailable ({e}). Switching to SQLite engine.")
+            _use_sqlite = True
+            _pool = None
     return _pool
 
 def get_connection():
-    return get_pool().acquire()
+    global _use_sqlite
+    if _use_sqlite:
+        conn = sqlite3.connect(_sqlite_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+    try:
+        pool = get_pool()
+        if pool:
+            return pool.acquire()
+    except Exception:
+        _use_sqlite = True
+        conn = sqlite3.connect(_sqlite_path)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def execute_query(query, params=None, commit=False):
     """
-    Execute a parameterized query and return the cursor or results.
+    Execute a parameterized query and return cursor and conn.
     """
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        if params:
-            cursor.execute(query, params)
+        if _use_sqlite:
+            # Adapt Oracle functions to SQLite if needed
+            adapted_query = query.replace("TO_DATE(", "(").replace(", 'YYYY-MM-DD')", "")
+            if params:
+                cursor.execute(adapted_query, params)
+            else:
+                cursor.execute(adapted_query)
         else:
-            cursor.execute(query)
+            if params:
+                cursor.execute(query, params)
+            else:
+                cursor.execute(query)
         
         if commit:
             conn.commit()
@@ -61,9 +93,13 @@ def execute_fetch_all(query, params=None):
     conn = None
     try:
         cursor, conn = execute_query(query, params)
-        columns = [col[0].lower() for col in cursor.description]
-        results = [dict(zip(columns, row)) for row in cursor.fetchall()]
-        return results
+        if _use_sqlite:
+            rows = cursor.fetchall()
+            return [dict(row) for row in rows]
+        else:
+            columns = [col[0].lower() for col in cursor.description]
+            results = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            return results
     finally:
         if cursor:
             cursor.close()
@@ -78,11 +114,15 @@ def execute_fetch_one(query, params=None):
     conn = None
     try:
         cursor, conn = execute_query(query, params)
-        columns = [col[0].lower() for col in cursor.description]
-        row = cursor.fetchone()
-        if row:
-            return dict(zip(columns, row))
-        return None
+        if _use_sqlite:
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        else:
+            columns = [col[0].lower() for col in cursor.description]
+            row = cursor.fetchone()
+            if row:
+                return dict(zip(columns, row))
+            return None
     finally:
         if cursor:
             cursor.close()
@@ -91,9 +131,73 @@ def execute_fetch_one(query, params=None):
 
 def init_db():
     """
-    Creates tables if they do not exist using PL/SQL dynamic blocks.
+    Creates tables if they do not exist.
     """
-    # PL/SQL blocks for safe dynamic creation
+    global _use_sqlite
+    
+    # Check if we should use Oracle or SQLite
+    try:
+        pool = get_pool()
+    except Exception:
+        pool = None
+        
+    if _use_sqlite or pool is None:
+        logger.info("Initializing SQLite schema...")
+        conn = sqlite3.connect(_sqlite_path)
+        cur = conn.cursor()
+        cur.executescript("""
+            CREATE TABLE IF NOT EXISTS customers (
+                customer_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                mobile TEXT NOT NULL UNIQUE,
+                address TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS vehicles (
+                vehicle_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                customer_id INTEGER NOT NULL,
+                vehicle_number TEXT NOT NULL UNIQUE,
+                make TEXT,
+                model TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS bills (
+                bill_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                bill_number TEXT NOT NULL UNIQUE,
+                customer_id INTEGER NOT NULL,
+                vehicle_id INTEGER NOT NULL,
+                bill_date TEXT NOT NULL,
+                km INTEGER NOT NULL,
+                subtotal REAL NOT NULL,
+                discount REAL DEFAULT 0.00,
+                tax REAL DEFAULT 0.00,
+                total REAL NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(vehicle_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_bill_date ON bills(bill_date);
+
+            CREATE TABLE IF NOT EXISTS bill_items (
+                item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                bill_id INTEGER NOT NULL,
+                description TEXT NOT NULL,
+                amount REAL NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (bill_id) REFERENCES bills(bill_id) ON DELETE CASCADE
+            );
+        """)
+        conn.commit()
+        conn.close()
+        logger.info("SQLite schema initialized successfully.")
+        return
+
+    # Oracle Database Initialization
     ddl_blocks = [
         # CUSTOMERS
         """
@@ -187,10 +291,10 @@ def init_db():
         for block in ddl_blocks:
             cursor.execute(block)
         conn.commit()
-        logger.info("Database schema initialized successfully.")
+        logger.info("Oracle Database schema initialized successfully.")
     except Exception as e:
         conn.rollback()
-        logger.error(f"Failed to initialize database: {e}")
+        logger.error(f"Failed to initialize Oracle database: {e}")
         raise e
     finally:
         cursor.close()

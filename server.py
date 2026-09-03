@@ -169,13 +169,19 @@ def api_create_bill():
                 [cust_data['name'].strip(), cust_data.get('address', '').strip(), customer_id]
             )
         else:
-            # Oracle returning clause needs output variable
-            id_var = cursor.var(int)
-            cursor.execute(
-                "INSERT INTO customers (name, mobile, address) VALUES (:1, :2, :3) RETURNING customer_id INTO :4",
-                [cust_data['name'].strip(), mobile, cust_data.get('address', '').strip(), id_var]
-            )
-            customer_id = id_var.getvalue()[0]
+            if database.is_sqlite():
+                cursor.execute(
+                    "INSERT INTO customers (name, mobile, address) VALUES (?, ?, ?)",
+                    [cust_data['name'].strip(), mobile, cust_data.get('address', '').strip()]
+                )
+                customer_id = cursor.lastrowid
+            else:
+                id_var = cursor.var(int)
+                cursor.execute(
+                    "INSERT INTO customers (name, mobile, address) VALUES (:1, :2, :3) RETURNING customer_id INTO :4",
+                    [cust_data['name'].strip(), mobile, cust_data.get('address', '').strip(), id_var]
+                )
+                customer_id = id_var.getvalue()[0]
 
         # 2. Save or update vehicle
         veh_num = str(veh_data['vehicle_number']).strip().upper()
@@ -188,12 +194,19 @@ def api_create_bill():
                 [customer_id, veh_data.get('make', '').strip(), veh_data.get('model', '').strip(), vehicle_id]
             )
         else:
-            id_var = cursor.var(int)
-            cursor.execute(
-                "INSERT INTO vehicles (customer_id, vehicle_number, make, model) VALUES (:1, :2, :3, :4) RETURNING vehicle_id INTO :5",
-                [customer_id, veh_num, veh_data.get('make', '').strip(), veh_data.get('model', '').strip(), id_var]
-            )
-            vehicle_id = id_var.getvalue()[0]
+            if database.is_sqlite():
+                cursor.execute(
+                    "INSERT INTO vehicles (customer_id, vehicle_number, make, model) VALUES (?, ?, ?, ?)",
+                    [customer_id, veh_num, veh_data.get('make', '').strip(), veh_data.get('model', '').strip()]
+                )
+                vehicle_id = cursor.lastrowid
+            else:
+                id_var = cursor.var(int)
+                cursor.execute(
+                    "INSERT INTO vehicles (customer_id, vehicle_number, make, model) VALUES (:1, :2, :3, :4) RETURNING vehicle_id INTO :5",
+                    [customer_id, veh_num, veh_data.get('make', '').strip(), veh_data.get('model', '').strip(), id_var]
+                )
+                vehicle_id = id_var.getvalue()[0]
 
         # 3. Calculations
         subtotal = 0.0
@@ -211,24 +224,38 @@ def api_create_bill():
         bill_date = datetime.strptime(bill_date_str, "%Y-%m-%d").date()
 
         # 4. Insert bill with placeholder number first
-        bill_id_var = cursor.var(int)
-        cursor.execute(
-            """INSERT INTO bills (bill_number, customer_id, vehicle_id, bill_date, km, subtotal, discount, tax, total)
-               VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9) RETURNING bill_id INTO :10""",
-            ["TEMP-PLACEHOLDER", customer_id, vehicle_id, bill_date, int(km), subtotal, discount, tax, total, bill_id_var]
-        )
-        bill_id = bill_id_var.getvalue()[0]
-
-        # 5. Compute actual sequential bill number and update
-        bill_number = f"SS-{Config.BILL_START_NUMBER + bill_id - 1}"
-        cursor.execute("UPDATE bills SET bill_number = :1 WHERE bill_id = :2", [bill_number, bill_id])
+        if database.is_sqlite():
+            cursor.execute(
+                """INSERT INTO bills (bill_number, customer_id, vehicle_id, bill_date, km, subtotal, discount, tax, total)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                ["TEMP-PLACEHOLDER", customer_id, vehicle_id, bill_date.isoformat(), int(km), subtotal, discount, tax, total]
+            )
+            bill_id = cursor.lastrowid
+            bill_number = f"SS-{Config.BILL_START_NUMBER + bill_id - 1}"
+            cursor.execute("UPDATE bills SET bill_number = ? WHERE bill_id = ?", [bill_number, bill_id])
+        else:
+            bill_id_var = cursor.var(int)
+            cursor.execute(
+                """INSERT INTO bills (bill_number, customer_id, vehicle_id, bill_date, km, subtotal, discount, tax, total)
+                   VALUES (:1, :2, :3, :4, :5, :6, :7, :8, :9) RETURNING bill_id INTO :10""",
+                ["TEMP-PLACEHOLDER", customer_id, vehicle_id, bill_date, int(km), subtotal, discount, tax, total, bill_id_var]
+            )
+            bill_id = bill_id_var.getvalue()[0]
+            bill_number = f"SS-{Config.BILL_START_NUMBER + bill_id - 1}"
+            cursor.execute("UPDATE bills SET bill_number = :1 WHERE bill_id = :2", [bill_number, bill_id])
 
         # 6. Insert items
         for item in items:
-            cursor.execute(
-                "INSERT INTO bill_items (bill_id, description, amount) VALUES (:1, :2, :3)",
-                [bill_id, item['description'].strip(), float(item['amount'])]
-            )
+            if database.is_sqlite():
+                cursor.execute(
+                    "INSERT INTO bill_items (bill_id, description, amount) VALUES (?, ?, ?)",
+                    [bill_id, item['description'].strip(), float(item['amount'])]
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO bill_items (bill_id, description, amount) VALUES (:1, :2, :3)",
+                    [bill_id, item['description'].strip(), float(item['amount'])]
+                )
 
         # Commit transaction
         conn.commit()
@@ -545,5 +572,6 @@ if __name__ == '__main__':
     # Initialize DB tables
     database.init_db()
     
-    print(f"Starting server on port {Config.FLASK_PORT}...")
-    app.run(host='0.0.0.0', port=Config.FLASK_PORT, debug=(Config.FLASK_ENV == 'development'))
+    port = int(os.environ.get("PORT", Config.FLASK_PORT))
+    print(f"Starting server on port {port}...")
+    app.run(host='0.0.0.0', port=port, debug=(Config.FLASK_ENV == 'development'))

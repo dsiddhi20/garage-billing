@@ -1,8 +1,12 @@
-# Sachin's Sumangal Services - Garage Billing System
+# Sumangal Auto Billing
 
-A modern, mobile-first garage billing web application built for **Sachin's Sumangal Services (Maruti Servicing Centre)**.
+**Sachin's Sumangal Services • Maruti Servicing Centre**
 
-Designed for simplicity: a garage owner can create, generate, and share professional digital bills and PDF invoices directly from an Android mobile phone without complex accounting or technical knowledge, while all billing data is stored securely in an Oracle Database backend with a dedicated Admin Management Dashboard.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/dsiddhi20/garage-billing)
+
+A modern, mobile-first garage billing web application built specifically for **Sachin's Sumangal Services (Maruti Servicing Centre)**.
+
+Designed for real-world simplicity: the garage owner can create, calculate, and share professional digital bills and PDF invoices directly from an Android phone without any computer knowledge or manual math, while all data is securely recorded with an Admin Management Dashboard.
 
 ---
 

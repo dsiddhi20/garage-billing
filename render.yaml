@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: sumangal-auto-billing
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: OWNER_PIN_HASH
+        value: 03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4
+      - key: ADMIN_PASSWORD_HASH
+        value: 240a10c4c478f77341e97669d5870020a671cf70c14b2d9c02d1373cc4ee61f0
+      - key: GARAGE_NAME
+        value: Sachin's Sumangal Services
+      - key: GARAGE_SUBTITLE
+        value: Maruti Servicing Centre
+      - key: GARAGE_PHONES
+        value: 9422711826, 9834196573
+      - key: GARAGE_ADDRESS
+        value: Near LIC Office, Hingoli Road, Nanded
+      - key: BILL_START_NUMBER
+        value: "2457"
