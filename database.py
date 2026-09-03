@@ -110,7 +110,6 @@ def init_db():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )';
-                EXECUTE IMMEDIATE 'CREATE INDEX idx_cust_mobile ON customers(mobile)';
             END IF;
         END;
         """,
@@ -131,7 +130,6 @@ def init_db():
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     CONSTRAINT fk_vehicle_customer FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE
                 )';
-                EXECUTE IMMEDIATE 'CREATE INDEX idx_veh_number ON vehicles(vehicle_number)';
             END IF;
         END;
         """,
@@ -158,7 +156,6 @@ def init_db():
                     CONSTRAINT fk_bill_customer FOREIGN KEY (customer_id) REFERENCES customers(customer_id),
                     CONSTRAINT fk_bill_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicles(vehicle_id)
                 )';
-                EXECUTE IMMEDIATE 'CREATE INDEX idx_bill_number ON bills(bill_number)';
                 EXECUTE IMMEDIATE 'CREATE INDEX idx_bill_date ON bills(bill_date)';
             END IF;
         END;
