@@ -73,7 +73,7 @@ garage-billing/
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/garage-billing.git
+git clone https://github.com/dsiddhi20/garage-billing.git
 cd garage-billing
 ```
 
